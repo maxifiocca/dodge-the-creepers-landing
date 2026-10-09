@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#155e63">
+  <meta name="description" content="Conocé Dodge the Creepers, mi juego arcade de reflejos hecho con Godot. Movete, esquivá y tratá de sobrevivir.">
+  <title>Dodge the Creepers — ¡Que no te atrapen!</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #123e5c;
+      --panel: #fff9ed;
+      --text: #fff8e8;
+      --muted: rgba(255,248,232,.76);
+      --lime: #dbff70;
+      --pink: #ff725e;
+      --teal: #123e5c;
+      --line: rgba(255,255,255,.2);
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; background: var(--bg); }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.6;
+    }
+    a { color: inherit; text-decoration: none; }
+    a:focus-visible { outline: 3px solid var(--lime); outline-offset: 5px; }
+    .wrap { width: min(1120px, calc(100% - 48px)); margin-inline: auto; }
+    .eyebrow {
+      color: var(--lime);
+      font: 700 .76rem/1.2 var(--mono);
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    .topbar {
+      position: absolute;
+      z-index: 2;
+      top: 0;
+      left: 0;
+      width: 100%;
+      border-bottom: 1px solid rgba(255,255,255,.18);
+    }
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 76px;
+    }
+    .brand { color: white; font: 800 .88rem var(--mono); letter-spacing: -.04em; }
+    .brand span { color: var(--lime); }
+    .nav-links { display: flex; gap: 30px; color: rgba(255,255,255,.78); font-size: .88rem; }
+    .nav-links a:hover { color: var(--lime); }
+    .hero {
+      position: relative;
+      display: grid;
+      min-height: 740px;
+      align-items: center;
+      overflow: hidden;
+      padding: 120px 0 80px;
+      background:
+        radial-gradient(ellipse at 72% 43%, rgba(219,255,112,.16), transparent 32%),
+        linear-gradient(135deg, #164b68 5%, #103750 100%);
+    }
+    .hero::before {
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,.22) 1px, transparent 1px);
+      background-size: 22px 22px;
+      content: "";
+      opacity: .2;
+      mask-image: linear-gradient(to right, transparent, black 55%);
+    }
+    .hero-grid {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1.08fr .92fr;
+      align-items: center;
+      gap: 42px;
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      max-width: 700px;
+      margin: 18px 0;
+      margin: 22px 0;
+      color: #fff8e8;
+      font-size: clamp(3.7rem, 8vw, 6.9rem);
+      line-height: .88;
+      letter-spacing: -.075em;
+    }
+    h1 span { color: var(--lime); font-family: Georgia, serif; font-style: italic; font-weight: 500; letter-spacing: -.09em; }
+    .lead { max-width: 510px; color: rgba(255,255,255,.82); font-size: 1.08rem; }
+    .hero .eyebrow { color: var(--lime); }
+    .actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 30px; }
+    .button {
+      display: inline-flex;
+      min-height: 50px;
+      align-items: center;
+      justify-content: center;
+      padding: 0 22px;
+      border: 2px solid var(--lime);
+      border-radius: 999px;
+      background: var(--lime);
+      color: var(--teal);
+      font-weight: 800;
+      transition: transform .2s, background .2s;
+    }
+    .button:hover { transform: translateY(-3px) rotate(-1deg); background: #edffb3; }
+    .button.secondary { border-color: rgba(255,255,255,.5); background: transparent; color: white; }
+    .button.secondary:hover { border-color: var(--lime); color: var(--lime); }
+    .game-shot {
+      position: relative;
+      width: min(100%, 380px);
+      justify-self: center;
+      overflow: visible;
+      border: 9px solid #fff4dd;
+      border-radius: 11px;
+      background: #fff4dd;
+      box-shadow: 12px 14px 0 rgba(10,47,50,.32), 0 30px 80px rgba(0,0,0,.2);
+      transform: rotate(3deg);
+    }
+    .game-shot img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 2 / 3;
+      object-fit: contain;
+      image-rendering: pixelated;
+      border-radius: 3px;
+    }
+    .score {
+      position: absolute;
+      top: -21px;
+      left: -32px;
+      padding: 9px 14px;
+      border: 3px solid var(--teal);
+      border-radius: 999px;
+      background: var(--pink);
+      color: #fff8e8;
+      font: 800 .72rem var(--mono);
+      letter-spacing: .03em;
+      transform: rotate(-9deg);
+    }
+    .art-caption {
+      position: absolute;
+      right: -29px;
+      bottom: 24px;
+      padding: 8px 12px;
+      border: 2px solid var(--teal);
+      border-radius: 999px;
+      background: var(--lime);
+      color: var(--teal);
+      font: 800 .64rem var(--mono);
+      letter-spacing: .02em;
+      transform: rotate(-5deg);
+    }
+    .floating-creeper { position: absolute; z-index: 1; width: 72px; height: 72px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(3px 4px 0 rgba(0,0,0,.18)); }
+    .creeper-one { top: 17%; right: 42%; transform: rotate(-18deg); }
+    .creeper-two { right: 3%; bottom: 15%; width: 56px; transform: rotate(22deg); }
+    .hero-note { display: inline-block; margin-top: 20px; color: rgba(255,255,255,.68); font: .72rem var(--mono); letter-spacing: .04em; }
+    section { padding: 106px 0; }
+    main > section:not(.hero):not(.final-cta) {
+      position: relative;
+      isolation: isolate;
+      background: var(--bg);
+    }
+    main > section:not(.hero):not(.final-cta)::before,
+    main > section:not(.hero):not(.final-cta)::after {
+      position: absolute;
+      z-index: 0;
+      width: 62px;
+      height: 48px;
+      background: url("assets/creeper.png") center / contain no-repeat;
+      content: "";
+      opacity: .4;
+      pointer-events: none;
+    }
+    main > section:not(.hero):not(.final-cta)::before {
+      top: 20%;
+      left: 3%;
+      transform: rotate(-14deg);
+    }
+    main > section:not(.hero):not(.final-cta)::after {
+      right: 4%;
+      bottom: 14%;
+      transform: rotate(18deg);
+    }
+    .about-grid, .features > .wrap, .process-grid { position: relative; z-index: 1; }
+    .section-head { max-width: 650px; margin-bottom: 42px; }
+    h2 { margin: 12px 0; font-size: clamp(2.3rem, 5vw, 4rem); line-height: 1; letter-spacing: -.065em; }
+    .section-head p, .card p, .about-copy { color: var(--muted); }
+    .section-head h2 em { color: var(--lime); font-family: Georgia, serif; font-weight: 500; }
+    .eyebrow { color: var(--lime); }
+    .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 70px; align-items: start; }
+    .about-copy { font-size: 1.08rem; }
+    .about-copy strong { color: var(--text); }
+    .stat {
+      display: flex;
+      justify-content: space-between;
+      padding: 19px 0;
+      border-bottom: 1px solid var(--line);
+      font: .85rem var(--mono);
+    }
+    .stat span:last-child { color: var(--lime); }
+    .features { background: var(--bg); }
+    .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .card {
+      min-height: 290px;
+      padding: 26px;
+      border: 2px solid #173d3e;
+      border-radius: 9px;
+      background: #fff9ed;
+      color: #173d3e;
+      box-shadow: 5px 6px 0 rgba(0,0,0,.24);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .card:hover { transform: translateY(-5px) rotate(-.5deg); box-shadow: 7px 11px 0 rgba(0,0,0,.24); }
+    .card:nth-child(2) { background: #ffe2d6; }
+    .card:nth-child(3) { background: #dcecf0; }
+    .card-visual {
+      display: flex;
+      height: 78px;
+      align-items: center;
+      gap: 15px;
+      margin: 12px 0 22px;
+    }
+    .card-visual img { width: 72px; height: 72px; object-fit: contain; }
+    .card-visual .large-sprite { width: 86px; height: 76px; }
+    .card-visual .small-sprite { width: 65px; height: 65px; }
+    .card-visual .mini-shot {
+      width: 100%;
+      height: 78px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      object-fit: cover;
+      object-position: center;
+    }
+    .card-number { color: #c14d3f; font: 800 .78rem var(--mono); }
+    h3 { margin: 0 0 9px; font-size: 1.2rem; letter-spacing: -.03em; }
+    .card p { margin-bottom: 0; color: #55716d; font-size: .94rem; }
+    .process-grid { display: grid; grid-template-columns: .8fr 1.2fr; gap: 70px; align-items: center; }
+    .quote {
+      padding: 30px;
+      border: 2px solid rgba(255,255,255,.24);
+      border-left: 9px solid var(--pink);
+      border-radius: 8px;
+      background: rgba(12,43,63,.88);
+      color: var(--text);
+      font-size: 1.12rem;
+      box-shadow: 5px 6px 0 var(--text);
+    }
+    .quote strong { color: #c14d3f; }
+    .tech-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+    .tag { padding: 7px 12px; border: 1px solid rgba(255,255,255,.5); border-radius: 999px; color: var(--text); background: rgba(255,255,255,.08); font: .72rem var(--mono); }
+    .final-cta {
+      padding: 84px 0;
+      background: var(--bg);
+      color: #fff8e8;
+      text-align: center;
+    }
+    .final-cta .eyebrow { color: var(--lime); }
+    .final-cta h2 { max-width: 720px; margin: 14px auto; }
+    .final-cta p { max-width: 550px; margin: 0 auto 26px; color: rgba(255,248,232,.85); }
+    .final-cta .button { border-color: var(--pink); background: var(--pink); color: white; }
+    footer { padding: 24px 0; background: #0c2b3f; color: rgba(255,255,255,.76); font: .74rem var(--mono); }
+    footer a { color: var(--lime); text-decoration: underline; text-underline-offset: 3px; }
+    .footer-inner { display: flex; justify-content: space-between; gap: 20px; }
+    @media (max-width: 760px) {
+      .wrap { width: min(100% - 36px, 560px); }
+      .nav { min-height: 66px; }
+      .nav-links { gap: 16px; font-size: .78rem; }
+      .nav-links a:nth-child(2) { display: none; }
+      .hero { min-height: auto; padding: 130px 0 72px; }
+      .hero-grid, .about-grid, .process-grid { grid-template-columns: 1fr; gap: 42px; }
+      .game-shot { width: min(80%, 320px); margin: 0 20px 20px 0; }
+      .floating-creeper { width: 52px; }
+      .creeper-one { right: 4%; top: 46%; }
+      .creeper-two { right: auto; left: 1%; bottom: 8%; width: 42px; }
+      section { padding: 76px 0; }
+      main > section:not(.hero):not(.final-cta)::before,
+      main > section:not(.hero):not(.final-cta)::after { width: 42px; height: 34px; opacity: .25; }
+      main > section:not(.hero):not(.final-cta)::before { left: 1%; }
+      main > section:not(.hero):not(.final-cta)::after { right: 1%; }
+      .card-grid { grid-template-columns: 1fr; }
+      .card { min-height: auto; }
+      .footer-inner { flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <nav class="nav wrap" aria-label="Navegación principal">
+      <a class="brand" href="#inicio">DODGE<span>!</span>THE_CREEPERS</a>
+      <div class="nav-links">
+        <a href="#juego">El juego</a>
+        <a href="#mecanicas">Mecánicas</a>
+        <a href="#proceso">Detrás del juego</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="inicio">
+      <div class="hero-grid wrap">
+        <div>
+          <div class="eyebrow">ARCADE · GODOT · REFLEJOS EN PELIGRO</div>
+          <h1>¡Que no<br>te <span>atrapen!</span></h1>
+          <p class="lead">Hice un juego con una regla simple: si te quedás quieto, te atrapan. Corré, esquivá y tratá de sobrevivir todo lo que puedas.</p>
+          <div class="actions">
+            <a class="button" href="#juego">Conocé el juego <span aria-hidden="true">&nbsp;↓</span></a>
+            <a class="button secondary" href="#proceso">Cómo lo hice</a>
+          </div>
+          <span class="hero-note">CONTROLES SENCILLOS. REFLEJOS A PRUEBA.</span>
+        </div>
+        <div class="game-shot">
+          <img src="assets/dodge-gameplay.png" alt="Captura real de Dodge the Creeps: el jugador intenta esquivar a los enemigos en la arena" width="480" height="720">
+          <div class="score">¡CUIDADO!</div>
+          <div class="art-caption">CASI ME ATRAPAN.</div>
+        </div>
+        <img class="floating-creeper creeper-one" src="assets/creeper.png" alt="" aria-hidden="true">
+        <img class="floating-creeper creeper-two" src="assets/creeper.png" alt="" aria-hidden="true">
+      </div>
+    </section>
+
+    <section id="juego">
+      <div class="about-grid wrap">
+        <div class="section-head">
+          <div class="eyebrow">01 / El objetivo</div>
+          <h2>La idea es simple.<br><em>El desafío, no tanto.</em></h2>
+        </div>
+        <div class="about-copy">
+          <p><strong>Dodge the Creepers</strong> es mi juego arcade de supervivencia hecho con Godot. Vos manejás al personaje en el medio de la arena, mientras los creepers se acercan desde todos lados.</p>
+          <p>Movete, buscá espacios libres y tratá de sumar segundos. Parece fácil hasta que la pantalla se llena de enemigos.</p>
+          <div class="stat"><span>PLAN</span><span>NO DEJARSE ATRAPAR</span></div>
+          <div class="stat"><span>VILLANOS</span><span>DEMASIADOS</span></div>
+          <div class="stat"><span>HERRAMIENTA</span><span>GODOT 💚</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="features" id="mecanicas">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="eyebrow">02 / Guía de supervivencia</div>
+          <h2>Primero, movete.<br><em>Después improvisá.</em></h2>
+          <p>Tres ideas para durar un poco más:</p>
+        </div>
+        <div class="card-grid">
+          <article class="card">
+            <div class="card-number">01 — MOVETE</div>
+            <div class="card-visual">
+              <img class="large-sprite" src="assets/player.png" alt="Sprite del personaje jugador" width="72" height="72">
+            </div>
+            <h3>No te quedes quieto</h3>
+            <p>Tu personaje va hacia donde lo muevas. Elegí una dirección y escapá.</p>
+          </article>
+          <article class="card">
+            <div class="card-number">02 — ANTICIPATE</div>
+            <div class="card-visual">
+              <img class="small-sprite" src="assets/creeper.png" alt="Sprite de un enemigo" width="65" height="65">
+              <img class="small-sprite" src="assets/creeper.png" alt="" width="65" height="65">
+            </div>
+            <h3>Fijate por dónde vienen</h3>
+            <p>Observá sus movimientos y buscá un espacio libre antes de que te rodeen.</p>
+          </article>
+          <article class="card">
+            <div class="card-number">03 — UNA MÁS</div>
+            <div class="card-visual">
+              <img class="mini-shot" src="assets/dodge-gameplay.png" alt="" width="250" height="78">
+            </div>
+            <h3>Superá tu récord</h3>
+            <p>Intentá de nuevo y aguantá un poco más. Cada segundo cuenta.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="proceso">
+      <div class="process-grid wrap">
+        <div>
+          <div class="eyebrow">03 / Detrás del juego</div>
+          <h2>Un juego pequeño.<br><em>Muchas pruebas.</em></h2>
+        </div>
+        <div>
+          <div class="quote">“Quería hacer algo fácil de entender y divertido de repetir. De esos juegos en los que decís <strong>‘una partida más’</strong> y, cuando mirás la hora, pasó un buen rato.”</div>
+          <p class="about-copy" style="margin:24px 0 0">Lo hice en Godot explorando cómo darle vida a cada partida: mover al personaje, sumar enemigos a la arena y encontrar el equilibrio para que el desafío sea divertido.</p>
+          <div class="tech-list" aria-label="Herramientas y conceptos">
+            <span class="tag">GODOT</span>
+            <span class="tag">GAMEPLAY 2D</span>
+            <span class="tag">MOVIMIENTO</span>
+            <span class="tag">ENEMIGOS</span>
+            <span class="tag">ARCADE</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="final-cta" id="jugar">
+      <div class="wrap">
+        <div class="eyebrow">¿Te animás al desafío?</div>
+        <h2>Movete. Esquivá. Superá tu récord.</h2>
+        <p>Los creepers ya están en la arena. ¿Cuánto tiempo vas a aguantar?</p>
+        <a class="button" href="#inicio">Intentarlo de nuevo <span aria-hidden="true">&nbsp;↑</span></a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner wrap">
+      <span>DODGE THE CREEPERS — UN JUEGO ARCADE HECHO EN GODOT</span>
+      <span>UN SEGUNDO MÁS. UNA PARTIDA MÁS.</span>
+    </div>
+  </footer>
+</body>
+</html>
