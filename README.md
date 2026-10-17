@@ -17,10 +17,3 @@ Después abrí <http://localhost:8000>.
 - Editá los textos y estilos en `docs/index.html`.
 - Reemplazá las imágenes de `docs/assets/` por capturas y sprites de tu propia versión si los tenés.
 
-## Imágenes
-
-Las imágenes incluidas son recursos de referencia del proyecto de ejemplo **Dodge the Creeps** de Godot; no son capturas de una versión propia del juego:
-
-- [Demo Dodge the Creeps de Godot](https://github.com/godotengine/godot-demo-projects/tree/master/2d/dodge_the_creeps)
-- Los sprites de personaje y enemigos pertenecen al paquete [Abstract Platformer de Kenney](https://kenney.nl/assets/abstract-platformer), publicado bajo [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/).
-- La captura de gameplay proviene de la carpeta `screenshots` de la demo enlazada arriba.
